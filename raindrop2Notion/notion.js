@@ -11,7 +11,7 @@ const formatHighlights = (highlights) => {
       .push(formatHighlightContent(highlight));
   });
   console.log(`Formatting highlights finished`);
-  return formatHighlights;
+  return formattedHighlights;
 };
 
 const formatHighlightContent = (highlight) => {
@@ -19,10 +19,15 @@ const formatHighlightContent = (highlight) => {
 };
 
 const syncHighlights = async (highlights) => {
-  console.log(`syncing ${highlights.length} highlights with notion ...`);
-  for (const highlight of highlights) {
+  const syncedRaindrops = new Set([]);
+  console.log(`syncing ${highlights.size} highlights with notion ...`);
+  for (const raindrop of highlights.values()) {
+    for (const highlight of raindrop) {
+      syncedRaindrops.add(highlight.raindropRef);
+    }
   }
   console.log(`syncing highlights with notion finished`);
+  return syncedRaindrops;
 };
 
 module.exports = { formatHighlights, syncHighlights };

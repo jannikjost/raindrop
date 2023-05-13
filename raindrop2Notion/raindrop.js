@@ -4,6 +4,7 @@ const urls = require("./urls.js");
 
 const syncCollectionTitle = "ToSync";
 const archiveCollectionTitle = "Archive";
+let archiveCollectionId;
 
 const getSyncCollectionId = async () => {
   try {
@@ -16,12 +17,15 @@ const getSyncCollectionId = async () => {
       },
     });
     if (res.data && res.data.result) {
-      return res.data.items.find((collection) => {
+      return res.data.items.filter((collection) => {
         if (collection.title === syncCollectionTitle) {
           console.log(`found sync collection id '${collection._id}'`);
           return collection;
         }
-      });
+        if (collection.title === archiveCollectionTitle) {
+          archiveCollectionId = collection._id;
+        }
+      })[0];
     }
   } catch (err) {
     console.error(err.message);
@@ -45,29 +49,35 @@ const getHighlights = async (id) => {
   }
 };
 
-const moveSyncedHighlightsToArchive = async (highlights) => {
-  console.log(`syncing ${highlights.length} highlights with notion ...`);
-  for (const highlight of highlights) {
-    //TODO - needs raindrop id not highlight _id
-    await moveToArchive(
-      highlight._id,
-      highlight.collectionId,
-      highlight.newCollectionId
-    );
+const moveSyncedHighlightsToArchive = async (raindropIds) => {
+  console.log(
+    `moving ${raindropIds.size} raindrops to ${archiveCollectionTitle} ...`
+  );
+  for (const raindropId of raindropIds.values()) {
+    await moveToArchive(raindropId, archiveCollectionId);
   }
-  console.log(`syncing highlights with notion finished`);
+  console.log(`moving raindrops finished`);
 };
 
-const moveToArchive = async (ids, collectionId, newCollectionId) => {
-  axios.put(urls.raindrop.raindrops + "/" + collectionId, {
-    headers: {
-      Authorization: "Bearer " + token.token,
-    },
-    data: {
-      ids,
-      collection: newCollectionId,
-    },
-  });
+const moveToArchive = async (id, newCollectionId) => {
+  try {
+    axios.put(
+      urls.raindrop.raindrops + "/" + id,
+      {
+        collection: {
+          $id: newCollectionId,
+          oid: newCollectionId,
+        },
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + token.token,
+        },
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+  }
 };
 
 module.exports = {
