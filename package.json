@@ -1,9 +1,10 @@
 {
-  "name": "raindrop",
+  "name": "raindrop2notion",
   "version": "1.0.0",
   "description": "",
-  "main": "raindrop.js",
+  "main": "raindrop2Notion.js",
   "scripts": {
+    "start": "node ./raindrop2Notion/raindrop2notion",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
