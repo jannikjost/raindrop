@@ -3,11 +3,12 @@ const token = require("./../token.json");
 const urls = require("./urls.js");
 
 const syncCollectionTitle = "ToSync";
+const archiveCollectionTitle = "Archive";
 
 const getSyncCollectionId = async () => {
   try {
     console.log(
-      `getting sync collection id for collection ${syncCollectionTitle} ...`
+      `getting sync collection id for collection '${syncCollectionTitle}' ...`
     );
     const res = await axios.get(urls.raindrop.collections, {
       headers: {
@@ -44,6 +45,33 @@ const getHighlights = async (id) => {
   }
 };
 
-const moveToArchive = async () => {};
+const moveSyncedHighlightsToArchive = async (highlights) => {
+  console.log(`syncing ${highlights.length} highlights with notion ...`);
+  for (const highlight of highlights) {
+    //TODO - needs raindrop id not highlight _id
+    await moveToArchive(
+      highlight._id,
+      highlight.collectionId,
+      highlight.newCollectionId
+    );
+  }
+  console.log(`syncing highlights with notion finished`);
+};
 
-module.exports = { getSyncCollectionId, getHighlights, moveToArchive };
+const moveToArchive = async (ids, collectionId, newCollectionId) => {
+  axios.put(urls.raindrop.raindrops + "/" + collectionId, {
+    headers: {
+      Authorization: "Bearer " + token.token,
+    },
+    data: {
+      ids,
+      collection: newCollectionId,
+    },
+  });
+};
+
+module.exports = {
+  getSyncCollectionId,
+  getHighlights,
+  moveSyncedHighlightsToArchive,
+};
