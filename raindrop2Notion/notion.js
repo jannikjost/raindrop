@@ -8,7 +8,7 @@ function getHighlightBlueprint(title, link) {
     },
     cover: {
       external: {
-        url: "https://upload.wikimedia.org/wikipedia/commons/6/62/Tuscankale.jpg",
+        url: "https://i.pinimg.com/564x/b5/1a/3f/b51a3f209222bdf01062f4da0d7da66f.jpg",
       },
     },
     properties: {
