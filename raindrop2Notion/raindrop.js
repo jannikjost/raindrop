@@ -13,7 +13,7 @@ const getSyncCollectionId = async () => {
     );
     const res = await axios.get(urls.raindrop.collections, {
       headers: {
-        Authorization: "Bearer " + token.token,
+        Authorization: "Bearer " + token.raindropToken,
       },
     });
     if (res.data && res.data.result) {
@@ -37,7 +37,7 @@ const getHighlights = async (id) => {
     console.log("getting highlights ...");
     const res = await axios.get(urls.raindrop.highlights + "/" + id, {
       headers: {
-        Authorization: "Bearer " + token.token,
+        Authorization: "Bearer " + token.raindropToken,
       },
     });
     if (res.data && res.data.result) {
@@ -71,7 +71,7 @@ const moveToArchive = async (id, newCollectionId) => {
       },
       {
         headers: {
-          Authorization: "Bearer " + token.token,
+          Authorization: "Bearer " + token.raindropToken,
         },
       }
     );
