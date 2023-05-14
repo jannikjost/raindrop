@@ -1,72 +1,69 @@
 const axios = require("axios");
 const token = require("./../token.json");
 
-async function addItem(text) {
-  try {
-    const response = await axios.post(
-      "https://api.notion.com/v1/pages",
-      {
-        parent: { database_id: token.notionDatabaseId },
-        icon: {
-          emoji: "🥬",
-        },
-        cover: {
-          external: {
-            url: "https://upload.wikimedia.org/wikipedia/commons/6/62/Tuscankale.jpg",
-          },
-        },
-        properties: {
-          Name: {
-            title: [
-              {
-                text: {
-                  content: "Tuscan Kale",
-                },
-              },
-            ],
-          },
-        },
-        children: [
+function getHighlightBlueprint(title, link) {
+  return {
+    icon: {
+      emoji: "📰",
+    },
+    cover: {
+      external: {
+        url: "https://upload.wikimedia.org/wikipedia/commons/6/62/Tuscankale.jpg",
+      },
+    },
+    properties: {
+      Name: {
+        title: [
           {
-            object: "block",
-            type: "heading_2",
-            heading_2: {
-              rich_text: [{ type: "text", text: { content: "Lacinato kale" } }],
-            },
-          },
-          {
-            object: "block",
-            type: "paragraph",
-            paragraph: {
-              rich_text: [
-                {
-                  type: "text",
-                  text: {
-                    content:
-                      "Lacinato kale is a variety of kale with a long tradition in Italian cuisine, especially that of Tuscany. It is also known as Tuscan kale, Italian kale, dinosaur kale, kale, flat back kale, palm tree kale, or black Tuscan palm.",
-                    link: {
-                      url: "https://en.wikipedia.org/wiki/Lacinato_kale",
-                    },
-                  },
-                },
-              ],
+            text: {
+              content: title,
             },
           },
         ],
       },
-      {
-        headers: {
-          Authorization: "Bearer " + token.notionToken,
-          "Content-Type": " application/json",
-          "Notion-Version": "2022-06-28",
+      Link: {
+        url: link,
+      },
+      Status: {
+        status: {
+          name: "Erledigt",
         },
-      }
-    );
-    if (response && response.data) {
-      console.log("Success! Entry added.");
+      },
+      Typ: {
+        select: { name: "Artikel" },
+      },
+    },
+    children: [
+      {
+        object: "block",
+        type: "heading_1",
+        heading_1: {
+          rich_text: [
+            { type: "text", text: { content: `Highlights von ${title}` } },
+          ],
+        },
+      },
+    ],
+  };
+}
+
+async function addPage(content) {
+  const response = await axios.post(
+    "https://api.notion.com/v1/pages",
+    {
+      parent: { database_id: token.notionDatabaseId },
+      ...content,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + token.notionToken,
+        "Content-Type": " application/json",
+        "Notion-Version": "2022-06-28",
+      },
     }
-  } catch (error) {
-    console.error(error);
+  );
+  if (response && response.data) {
+    console.log("Success! Entry added.");
   }
 }
 
@@ -76,32 +73,49 @@ const formatHighlights = (highlights) => {
 
   highlights.forEach((highlight) => {
     if (!formattedHighlights.has(highlight.raindropRef)) {
-      formattedHighlights.set(highlight.raindropRef, []);
+      formattedHighlights.set(
+        highlight.raindropRef,
+        getHighlightBlueprint(highlight.title, highlight.link)
+      );
     }
     formattedHighlights
       .get(highlight.raindropRef)
-      .push(formatHighlightContent(highlight));
+      .children.push(formatHighlightContent(highlight));
   });
   console.log(`Formatting highlights finished`);
   return formattedHighlights;
 };
 
 const formatHighlightContent = (highlight) => {
-  return highlight;
+  return {
+    object: "block",
+    type: "paragraph",
+    paragraph: {
+      rich_text: [
+        {
+          type: "text",
+          text: {
+            content: highlight.text,
+          },
+        },
+      ],
+    },
+  };
 };
 
 const syncHighlights = async (highlights) => {
-  addItem();
-
-  // const syncedRaindrops = new Set([]);
-  // console.log(`syncing ${highlights.size} highlights with notion ...`);
-  // for (const raindrop of highlights.values()) {
-  //   for (const highlight of raindrop) {
-  //     syncedRaindrops.add(highlight.raindropRef);
-  //   }
-  // }
-  // console.log(`syncing highlights with notion finished`);
-  // return syncedRaindrops;
+  const syncedRaindrops = new Set([]);
+  console.log(`syncing ${highlights.size} highlights with notion ...`);
+  for (const [key, value] of highlights.entries()) {
+    try {
+      await addPage(value);
+      syncedRaindrops.add(key);
+    } catch (err) {
+      console.error(`${key} could not be synced ${err.data}`);
+    }
+  }
+  console.log(`syncing highlights with notion finished`);
+  return syncedRaindrops;
 };
 
 module.exports = { formatHighlights, syncHighlights };
