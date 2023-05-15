@@ -1,5 +1,5 @@
 const axios = require("axios");
-const token = require("./../token.json");
+const token = require("../token.json");
 const urls = require("./urls.js");
 
 const syncCollectionTitle = "ToSync";

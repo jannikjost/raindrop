@@ -1,5 +1,5 @@
 const axios = require("axios");
-const token = require("./../token.json");
+const token = require("../token.json");
 
 function getHighlightBlueprint(title, link) {
   return {
